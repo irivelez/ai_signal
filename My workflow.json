@@ -1,0 +1,1400 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 8
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -176,
+        -128
+      ],
+      "id": "0b397265-c9e1-4c23-8ce1-cb173f99b9da",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "url": "https://oauth.reddit.com/r/artificial+ChatGPT+OpenAI+Anthropic+ClaudeAI+LocalLLaMA+Singularity+ArtificialInteligence+ChatGPTPro+AI_Agents/hot.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "t",
+              "value": "day"
+            },
+            {
+              "name": "limit",
+              "value": "50"
+            },
+            {
+              "name": "raw_json",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        32,
+        -128
+      ],
+      "id": "8f7e5f77-ff64-463c-b9cc-3e2677429fc1",
+      "name": "Reddit - Get Hot Posts",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "2x2VnDnXj7vYQd9W",
+          "name": "Reddit"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "https://hacker-news.firebaseio.com/v0/topstories.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        48,
+        64
+      ],
+      "id": "f20dd5f3-a887-471a-bbaf-77fe6a6eb7bb",
+      "name": "HN Get Top Story IDs"
+    },
+    {
+      "parameters": {
+        "url": "=https://hacker-news.firebaseio.com/v0/item/{{ $json}}.json",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        448,
+        64
+      ],
+      "id": "0d634ba4-a894-46a3-82b7-7b6ffa1e48b1",
+      "name": "HN - Get Story Details"
+    },
+    {
+      "parameters": {
+        "maxItems": 50
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        256,
+        64
+      ],
+      "id": "9c003d4c-ff3b-4574-ac4a-330aa5c4e760",
+      "name": "Limit to 50 Stories"
+    },
+    {
+      "parameters": {
+        "jsCode": "// AI-related keywords to filter by\nconst aiKeywords = [\n  'ai', 'artificial intelligence', 'chatgpt', 'gpt', 'llm',\n  'openai', 'claude', 'anthropic', 'prompt', 'prompting',\n  'machine learning', 'ml', 'deep learning', 'automation',\n  'langchain', 'rag', 'vector', 'embedding', 'crewai', 'mcp',\n];\n\n// Get all items from previous node\nconst items = $input.all();\n\n// Filter items that contain AI keywords in title or text\nconst filteredItems = items.filter(item => {\n  const title = (item.json.title || '').toLowerCase();\n  const text = (item.json.text || '').toLowerCase();\n  const combined = title + ' ' + text;\n  \n  // Check if any keyword is present\n  return aiKeywords.some(keyword => combined.includes(keyword));\n});\n\n// Return filtered items\nreturn filteredItems;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        656,
+        64
+      ],
+      "id": "95f02a94-7450-4b44-bd31-2c53aed63593",
+      "name": "Filter for AI Topics"
+    },
+    {
+      "parameters": {
+        "url": "https://oauth.reddit.com/r/artificial+ChatGPT+OpenAI+Anthropic+ClaudeAI+LocalLLaMA+Singularity+MachineLearning+ArtificialInteligence+AI_Agents/top.json",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "t",
+              "value": "week"
+            },
+            {
+              "name": "limit",
+              "value": "50"
+            },
+            {
+              "name": "raw_json",
+              "value": "1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        32,
+        -560
+      ],
+      "id": "67f5847b-497d-4a88-b5f2-1b595e58ae8c",
+      "name": "Reddit - Get Top Posts",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "2x2VnDnXj7vYQd9W",
+          "name": "Reddit"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1728,
+        -560
+      ],
+      "id": "a34810f1-8a45-48e1-bd62-7159d030e953",
+      "name": "Loop Over Top Posts"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1728,
+        -128
+      ],
+      "id": "ab3da80c-6d3c-4a07-8c37-a0e1d921e92f",
+      "name": "Loop Over Hot Posts"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter spam, duplicates, and low-quality comments\nconst items = $input.all();\n\nconsole.log('===== EXTRACTING COMMENTS =====');\nconsole.log('Total items received:', items.length);\n\nlet comments = [];\nlet postData = null;\n\n// Reddit's comment API returns different structures depending on how n8n processes it\nif (items.length > 0) {\n  const response = items[0].json;\n  \n  // Check if response is an array [post_listing, comments_listing]\n  if (Array.isArray(response) && response.length >= 2) {\n    console.log('Response is ARRAY with', response.length, 'elements');\n    \n    // Extract post from first element\n    if (response[0]?.data?.children?.[0]) {\n      postData = response[0].data.children[0].data;\n    }\n    \n    // Extract comments from second element\n    if (response[1]?.data?.children) {\n      comments = response[1].data.children\n        .filter(child => child.kind === 't1')\n        .map(child => child.data);\n    }\n  } \n  // Check if response is just a Listing (might be comments only, or post only)\n  else if (response.kind === 'Listing' && response.data?.children) {\n    console.log('Response is LISTING with', response.data.children.length, 'children');\n    \n    // Check what kind of children we have\n    const firstChild = response.data.children[0];\n    \n    if (firstChild?.kind === 't3') {\n      // This is a post listing\n      console.log('This is a POST listing');\n      postData = firstChild.data;\n      \n      // Comments might be in the second item\n      if (items.length > 1 && items[1].json?.data?.children) {\n        comments = items[1].json.data.children\n          .filter(child => child.kind === 't1')\n          .map(child => child.data);\n      }\n    } else if (firstChild?.kind === 't1') {\n      // This is a comments listing\n      console.log('This is a COMMENTS listing');\n      comments = response.data.children\n        .filter(child => child.kind === 't1')\n        .map(child => child.data);\n    }\n  }\n}\n\nconsole.log(`Extracted ${comments.length} raw comments`);\n\n// If we have no comments, something went wrong\nif (comments.length === 0) {\n  console.error('❌ NO COMMENTS FOUND - Check HTTP Request response structure');\n  return [{\n    json: {\n      error: 'No comments found in response',\n      post: postData,\n      comments: [],\n      stats: {\n        original_count: 0,\n        filtered_count: 0,\n        spam_removed: 0\n      }\n    }\n  }];\n}\n\n// Spam detection patterns\nconst spamPatterns = [\n  /\\b(check\\s+out|click\\s+here|visit\\s+my|follow\\s+me|subscribe)\\b/i,\n  /\\b(dm\\s+me|message\\s+me|buy\\s+now|limited\\s+time)\\b/i,\n  /https?:\\/\\/bit\\.ly|https?:\\/\\/tinyurl/i,\n  /discord\\.gg|t\\.me\\//i,\n  /\\b(airdrop|nft\\s+drop|free\\s+eth|free\\s+btc)\\b/i,\n  /^(lol|ok|yes|no|this|same|nice)$/i,\n  /^this\\s+is\\s+the\\s+way$/i,\n  /^\\+1$/i,\n];\n\n// Duplicate detection\nconst seen = new Set();\n\n// Filter comments\nconst filteredComments = comments.filter(comment => {\n  if (!comment || !comment.body) return false;\n  \n  const body = comment.body.toLowerCase().trim();\n  \n  // Remove deleted/removed\n  if (body === '[deleted]' || body === '[removed]') return false;\n  \n  // Remove very short comments\n  if (comment.body.length < 50) return false;\n  \n  // Check for spam\n  if (spamPatterns.some(pattern => pattern.test(comment.body))) return false;\n  \n  // Check for duplicates\n  if (seen.has(body)) return false;\n  seen.add(body);\n  \n  // Remove low scores\n  if (comment.score !== undefined && comment.score < 1) return false;\n  \n  return true;\n});\n\nconsole.log(`✓ Passed filter: ${filteredComments.length} out of ${comments.length}`);\nconsole.log(`✗ Removed: ${comments.length - filteredComments.length} spam/duplicates`);\n\n// === Build one clean string for the LLM ===\nfunction clean(text) {\n  return String(text || '')\n    .replace(/https?:\\/\\/\\S+/g, ' ')     // strip links\n    .replace(/[`*_>#-]/g, ' ')           // strip markdown noise\n    .replace(/\\s+/g, ' ')\n    .trim();\n}\n\nconst MAX_COMMENTS = 80;    // hard cap so we don't bloat the prompt\nconst MAX_CHARS    = 12000; // final safety cap\n\n// Prefer highest-score first (when score exists)\nfilteredComments.sort((a,b) => (b.score||0) - (a.score||0));\n\nconst used = filteredComments\n  .slice(0, MAX_COMMENTS)\n  .map(c => clean(c.body))\n  .filter(t => t.replace(/\\W/g,'').length >= 40); // keep only meaningful texts\n\nlet cleaned_comments = used.join('\\n\\n---\\n\\n');\nif (cleaned_comments.length > MAX_CHARS) {\n  cleaned_comments = cleaned_comments.slice(0, MAX_CHARS);\n}\n\n// Return filtered data + the single string\nreturn [{\n  json: {\n    post: postData,\n    comments: filteredComments,    // keep array if you want it later\n    cleaned_comments,              // <<<<<< one string for the LLM\n    cleaned_count: used.length,\n    stats: {\n      original_count: comments.length,\n      filtered_count: filteredComments.length,\n      spam_removed: comments.length - filteredComments.length,\n      removal_rate: `${((comments.length - filteredComments.length) / comments.length * 100).toFixed(1)}%`\n    }\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2160,
+        -112
+      ],
+      "id": "50e96c33-7387-464d-bf09-69d5d1873a8f",
+      "name": "Filter Spam & Duplicates Hot"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Filter spam, duplicates, and low-quality comments\nconst items = $input.all();\n\nconsole.log('===== EXTRACTING COMMENTS =====');\nconsole.log('Total items received:', items.length);\n\nlet comments = [];\nlet postData = null;\n\n// Reddit's comment API returns different structures depending on how n8n processes it\nif (items.length > 0) {\n  const response = items[0].json;\n  \n  // Check if response is an array [post_listing, comments_listing]\n  if (Array.isArray(response) && response.length >= 2) {\n    console.log('Response is ARRAY with', response.length, 'elements');\n    \n    // Extract post from first element\n    if (response[0]?.data?.children?.[0]) {\n      postData = response[0].data.children[0].data;\n    }\n    \n    // Extract comments from second element\n    if (response[1]?.data?.children) {\n      comments = response[1].data.children\n        .filter(child => child.kind === 't1')\n        .map(child => child.data);\n    }\n  } \n  // Check if response is just a Listing (might be comments only, or post only)\n  else if (response.kind === 'Listing' && response.data?.children) {\n    console.log('Response is LISTING with', response.data.children.length, 'children');\n    \n    // Check what kind of children we have\n    const firstChild = response.data.children[0];\n    \n    if (firstChild?.kind === 't3') {\n      // This is a post listing\n      console.log('This is a POST listing');\n      postData = firstChild.data;\n      \n      // Comments might be in the second item\n      if (items.length > 1 && items[1].json?.data?.children) {\n        comments = items[1].json.data.children\n          .filter(child => child.kind === 't1')\n          .map(child => child.data);\n      }\n    } else if (firstChild?.kind === 't1') {\n      // This is a comments listing\n      console.log('This is a COMMENTS listing');\n      comments = response.data.children\n        .filter(child => child.kind === 't1')\n        .map(child => child.data);\n    }\n  }\n}\n\nconsole.log(`Extracted ${comments.length} raw comments`);\n\n// If we have no comments, something went wrong\nif (comments.length === 0) {\n  console.error('❌ NO COMMENTS FOUND - Check HTTP Request response structure');\n  return [{\n    json: {\n      error: 'No comments found in response',\n      post: postData,\n      comments: [],\n      stats: {\n        original_count: 0,\n        filtered_count: 0,\n        spam_removed: 0\n      }\n    }\n  }];\n}\n\n// Spam detection patterns\nconst spamPatterns = [\n  /\\b(check\\s+out|click\\s+here|visit\\s+my|follow\\s+me|subscribe)\\b/i,\n  /\\b(dm\\s+me|message\\s+me|buy\\s+now|limited\\s+time)\\b/i,\n  /https?:\\/\\/bit\\.ly|https?:\\/\\/tinyurl/i,\n  /discord\\.gg|t\\.me\\//i,\n  /\\b(airdrop|nft\\s+drop|free\\s+eth|free\\s+btc)\\b/i,\n  /^(lol|ok|yes|no|this|same|nice)$/i,\n  /^this\\s+is\\s+the\\s+way$/i,\n  /^\\+1$/i,\n];\n\n// Duplicate detection\nconst seen = new Set();\n\n// Filter comments\nconst filteredComments = comments.filter(comment => {\n  if (!comment || !comment.body) return false;\n  \n  const body = comment.body.toLowerCase().trim();\n  \n  // Remove deleted/removed\n  if (body === '[deleted]' || body === '[removed]') return false;\n  \n  // Remove very short comments\n  if (comment.body.length < 50) return false;\n  \n  // Check for spam\n  if (spamPatterns.some(pattern => pattern.test(comment.body))) return false;\n  \n  // Check for duplicates\n  if (seen.has(body)) return false;\n  seen.add(body);\n  \n  // Remove low scores\n  if (comment.score !== undefined && comment.score < 1) return false;\n  \n  return true;\n});\n\nconsole.log(`✓ Passed filter: ${filteredComments.length} out of ${comments.length}`);\nconsole.log(`✗ Removed: ${comments.length - filteredComments.length} spam/duplicates`);\n\n// === Build one clean string for the LLM ===\nfunction clean(text) {\n  return String(text || '')\n    .replace(/https?:\\/\\/\\S+/g, ' ')     // strip links\n    .replace(/[`*_>#-]/g, ' ')           // strip markdown noise\n    .replace(/\\s+/g, ' ')\n    .trim();\n}\n\nconst MAX_COMMENTS = 80;    // hard cap so we don't bloat the prompt\nconst MAX_CHARS    = 12000; // final safety cap\n\n// Prefer highest-score first (when score exists)\nfilteredComments.sort((a,b) => (b.score||0) - (a.score||0));\n\nconst used = filteredComments\n  .slice(0, MAX_COMMENTS)\n  .map(c => clean(c.body))\n  .filter(t => t.replace(/\\W/g,'').length >= 40); // keep only meaningful texts\n\nlet cleaned_comments = used.join('\\n\\n---\\n\\n');\nif (cleaned_comments.length > MAX_CHARS) {\n  cleaned_comments = cleaned_comments.slice(0, MAX_CHARS);\n}\n\n// Return filtered data + the single string\nreturn [{\n  json: {\n    post: postData,\n    comments: filteredComments,    // keep array if you want it later\n    cleaned_comments,              // <<<<<< one string for the LLM\n    cleaned_count: used.length,\n    stats: {\n      original_count: comments.length,\n      filtered_count: filteredComments.length,\n      spam_removed: comments.length - filteredComments.length,\n      removal_rate: `${((comments.length - filteredComments.length) / comments.length * 100).toFixed(1)}%`\n    }\n  }\n}];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2176,
+        -544
+      ],
+      "id": "9139201d-76ad-4f21-8c56-45b6625d3d41",
+      "name": "Filter Spam & Duplicates Top"
+    },
+    {
+      "parameters": {
+        "url": "=https://oauth.reddit.com/r/{{ $json.subreddit }}/comments/{{ $json.id }}?depth=5&limit=100&sort=top",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "n8n-workflow/1.0"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1952,
+        -544
+      ],
+      "id": "2240383f-0351-4c12-bfcb-77112f877220",
+      "name": "Get Top Post Comments",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "2x2VnDnXj7vYQd9W",
+          "name": "Reddit"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "url": "=https://oauth.reddit.com/r/{{ $json.subreddit }}/comments/{{ $json.id }}?depth=5&limit=100&sort=hot",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "oAuth2Api",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "n8n-workflow/1.0"
+            }
+          ]
+        },
+        "options": {
+          "response": {
+            "response": {
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        1952,
+        -112
+      ],
+      "id": "cc81f4bc-d56f-4125-b5ad-c9d787418e52",
+      "name": "Get Hot Post Comments",
+      "credentials": {
+        "oAuth2Api": {
+          "id": "2x2VnDnXj7vYQd9W",
+          "name": "Reddit"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Flatten Reddit \"Listing\" responses into plain post items.\n// NO thresholds here — we let the next node (SignalScore) do the ranking.\n\nconst items = $input.all();\nlet posts = [];\n\nfor (const item of items) {\n  const data = item.json?.data;\n  if (!data) continue;\n\n  // If it's a Listing (typical for /top and /hot)\n  if (Array.isArray(data.children)) {\n    for (const child of data.children) {\n      const p = child?.data;\n      if (!p) continue;\n\n      // Keep only fields we need downstream (smaller payload → faster n8n UI and logs)\n      posts.push({\n        json: {\n          id: p.id,\n          title: p.title,\n          selftext: p.selftext || \"\",\n          subreddit: p.subreddit,\n          score: Number(p.score || 0),\n          num_comments: Number(p.num_comments || 0),\n          upvote_ratio: (p.upvote_ratio != null) ? Number(p.upvote_ratio) : null,\n          created_utc: Number(p.created_utc || 0),\n          permalink: p.permalink,\n          url: p.url_overridden_by_dest || p.url || \"\",\n          author: p.author,\n          domain: p.domain || \"\",\n        }\n      });\n    }\n  }\n  // If the node was fed a single post object (rare), normalize it as well\n  else if (data.title) {\n    posts.push({ json: data });\n  }\n}\n\nconsole.log(`Extracted ${posts.length} posts`);\nreturn posts;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        -128
+      ],
+      "id": "4ecec1c1-4072-4935-b55d-db85c543feea",
+      "name": "Extract Reddit Hot Posts"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Flatten Reddit \"Listing\" responses into plain post items.\n// NO thresholds here — we let the next node (SignalScore) do the ranking.\n\nconst items = $input.all();\nlet posts = [];\n\nfor (const item of items) {\n  const data = item.json?.data;\n  if (!data) continue;\n\n  // If it's a Listing (typical for /top and /hot)\n  if (Array.isArray(data.children)) {\n    for (const child of data.children) {\n      const p = child?.data;\n      if (!p) continue;\n\n      // Keep only fields we need downstream (smaller payload → faster n8n UI and logs)\n      posts.push({\n        json: {\n          id: p.id,\n          title: p.title,\n          selftext: p.selftext || \"\",\n          subreddit: p.subreddit,\n          score: Number(p.score || 0),\n          num_comments: Number(p.num_comments || 0),\n          upvote_ratio: (p.upvote_ratio != null) ? Number(p.upvote_ratio) : null,\n          created_utc: Number(p.created_utc || 0),\n          permalink: p.permalink,\n          url: p.url_overridden_by_dest || p.url || \"\",\n          author: p.author,\n          domain: p.domain || \"\",\n        }\n      });\n    }\n  }\n  // If the node was fed a single post object (rare), normalize it as well\n  else if (data.title) {\n    posts.push({ json: data });\n  }\n}\n\nconsole.log(`Extracted ${posts.length} posts`);\nreturn posts;"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        464,
+        -560
+      ],
+      "id": "fe6df573-45dc-469c-82d3-64c0994b7cf2",
+      "name": "Extract Reddit Top Posts"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Computes SignalScore and applies age windows per stream:\n// - reddit_top  → 7 days (168h)\n// - reddit_hot  → 48h\n// If \"stream\" isn't set, default to 48h.\n\nconst HALF_LIFE_HOURS = 24;\nconst now = Date.now() / 1000;\n\nfunction maxAgeHoursFor(stream) {\n  if (stream === 'reddit_top') return 168;  // 7 days\n  if (stream === 'reddit_hot') return 48;   // 48 hours\n  return 48;\n}\n\nreturn items\n  .map(i => {\n    const s = i.json;\n\n    const created = Number(s.created_utc || now);\n    const ageHrs  = (now - created) / 3600;\n\n    const freshness = Math.exp(-ageHrs / HALF_LIFE_HOURS);\n\n    const rawScore = Number(s.score || 0);\n    const comments = Number(s.num_comments || 0);\n    const upvote   = (s.upvote_ratio != null) ? Number(s.upvote_ratio) : 0.7;\n\n    const engagement = 0.6 * Math.log1p(rawScore) + 0.4 * Math.log1p(comments);\n    const upratioAdj = 1 + 0.2 * (upvote - 0.5);\n    const platformW  = 1.0;\n\n    const SignalScore = freshness * engagement * platformW * upratioAdj;\n\n    return { json: { ...s, ageHrs, freshness, engagement, SignalScore } };\n  })\n  .filter(i => i.json.ageHrs <= maxAgeHoursFor(i.json.stream));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        -560
+      ],
+      "id": "ae74a736-4305-4059-bbd8-ee66f06d55c4",
+      "name": "Top SignalScore"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Computes SignalScore and applies age windows per stream:\n// - reddit_top  → 7 days (168h)\n// - reddit_hot  → 48h\n// If \"stream\" isn't set, default to 48h.\n\nconst HALF_LIFE_HOURS = 24;\nconst now = Date.now() / 1000;\n\nfunction maxAgeHoursFor(stream) {\n  if (stream === 'reddit_top') return 168;  // 7 days\n  if (stream === 'reddit_hot') return 48;   // 48 hours\n  return 48;\n}\n\nreturn items\n  .map(i => {\n    const s = i.json;\n\n    const created = Number(s.created_utc || now);\n    const ageHrs  = (now - created) / 3600;\n\n    const freshness = Math.exp(-ageHrs / HALF_LIFE_HOURS);\n\n    const rawScore = Number(s.score || 0);\n    const comments = Number(s.num_comments || 0);\n    const upvote   = (s.upvote_ratio != null) ? Number(s.upvote_ratio) : 0.7;\n\n    const engagement = 0.6 * Math.log1p(rawScore) + 0.4 * Math.log1p(comments);\n    const upratioAdj = 1 + 0.2 * (upvote - 0.5);\n    const platformW  = 1.0;\n\n    const SignalScore = freshness * engagement * platformW * upratioAdj;\n\n    return { json: { ...s, ageHrs, freshness, engagement, SignalScore } };\n  })\n  .filter(i => i.json.ageHrs <= maxAgeHoursFor(i.json.stream));"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        -128
+      ],
+      "id": "f6933daa-9ea9-453a-971e-8b1571ab9c77",
+      "name": "Hot SignalScore"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "SignalScore",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        880,
+        -560
+      ],
+      "id": "c8afc40e-4cd8-414d-9115-a5f124bbd349",
+      "name": "Top Sort by SignalScore"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "SignalScore",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        880,
+        -128
+      ],
+      "id": "25e8ccc9-c4c9-46e9-9f99-cd69232b9b45",
+      "name": "Hot Sort by SignalStore"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Keep only the first N items after sorting\nconst N = 1; // adjust 15–20 if you like\nconst all = $input.all();\nreturn all.slice(0, N);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        -560
+      ],
+      "id": "ebb3de58-a1cb-4bf3-9d70-865b874157e6",
+      "name": "Top - Limit 18"
+    },
+    {
+      "parameters": {
+        "jsCode": "const N = 1; // adjust 10–12 if you like\nconst all = $input.all();\nreturn all.slice(0, N);"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1088,
+        -128
+      ],
+      "id": "4a9d9b17-f9ef-418e-bc2c-3287dc6a698b",
+      "name": "Hot - Limit 12"
+    },
+    {
+      "parameters": {
+        "jsCode": "console.log('Items passing to loop:', $input.all().length);\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        -560
+      ],
+      "id": "f7583ff9-12c1-4a5d-b921-904204c37907",
+      "name": "Top Log"
+    },
+    {
+      "parameters": {
+        "jsCode": "console.log('Items passing to loop:', $input.all().length);\nreturn $input.all();"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1264,
+        -128
+      ],
+      "id": "4629ff56-025e-4d0c-b70b-3ed6029fbaaf",
+      "name": "Hot Log"
+    },
+    {
+      "parameters": {
+        "jsCode": "function hasAny(text, arr) {\n  const t = text.toLowerCase();\n  return arr.some(k => t.includes(k));\n}\n\nconst TECH = [\n  'code','algorithm','implementation','solution','api','sdk','endpoint',\n  'latency','throughput','benchmark','eval','evaluation','weights','gguf',\n  'dataset','dataset','pipeline','vector','embedding','rag','agent','agents',\n  'tool use','mcp','crewai','langchain','vllm','triton','cuda','openvino'\n];\n\nconst PAIN = [\n  'struggling','blocked','stuck','frustrated','worried','pain point',\n  'challenge','problem','wish','need','stopped using','bug','issue','error',\n  'broken','why doesn\\'t','doesn\\'t work','any workaround'\n];\n\nconst GOV = [\n  'governance','compliance','policy','safety','alignment','privacy',\n  'security','copyright','license','licensing','usage rights','ethics'\n];\n\nreturn $input.all().map(i => {\n  const s = i.json;\n  const text = `${s.title || ''} ${s.selftext || ''}`.toLowerCase();\n\n  const tags = [];\n  if (hasAny(text, TECH)) tags.push('technical');\n  if (hasAny(text, PAIN)) tags.push('emotional');\n  if (hasAny(text, GOV))  tags.push('governance');\n  if (tags.length === 0) tags.push('unsure');\n\n  // quick confidence from keyword hits\n  const conf = {\n    technical: Number(hasAny(text, TECH)),\n    emotional: Number(hasAny(text, PAIN)),\n    governance: Number(hasAny(text, GOV)),\n  };\n\n  return { json: { ...s, tags_stageA: tags, conf_stageA: conf } };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1472,
+        -560
+      ],
+      "id": "441045e7-a858-49a8-b54f-a814414ce9c6",
+      "name": "Stage A - Top - Keywords"
+    },
+    {
+      "parameters": {
+        "jsCode": "function hasAny(text, arr) {\n  const t = text.toLowerCase();\n  return arr.some(k => t.includes(k));\n}\n\nconst TECH = [\n  'code','algorithm','implementation','solution','api','sdk','endpoint',\n  'latency','throughput','benchmark','eval','evaluation','weights','gguf',\n  'dataset','dataset','pipeline','vector','embedding','rag','agent','agents',\n  'tool use','mcp','crewai','langchain','vllm','triton','cuda','openvino'\n];\n\nconst PAIN = [\n  'struggling','blocked','stuck','frustrated','worried','pain point',\n  'challenge','problem','wish','need','stopped using','bug','issue','error',\n  'broken','why doesn\\'t','doesn\\'t work','any workaround'\n];\n\nconst GOV = [\n  'governance','compliance','policy','safety','alignment','privacy',\n  'security','copyright','license','licensing','usage rights','ethics'\n];\n\nreturn $input.all().map(i => {\n  const s = i.json;\n  const text = `${s.title || ''} ${s.selftext || ''}`.toLowerCase();\n\n  const tags = [];\n  if (hasAny(text, TECH)) tags.push('technical');\n  if (hasAny(text, PAIN)) tags.push('emotional');\n  if (hasAny(text, GOV))  tags.push('governance');\n  if (tags.length === 0) tags.push('unsure');\n\n  // quick confidence from keyword hits\n  const conf = {\n    technical: Number(hasAny(text, TECH)),\n    emotional: Number(hasAny(text, PAIN)),\n    governance: Number(hasAny(text, GOV)),\n  };\n\n  return { json: { ...s, tags_stageA: tags, conf_stageA: conf } };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1472,
+        -128
+      ],
+      "id": "7350dbef-a993-4fc9-a817-321ff442f1bb",
+      "name": "Stage A - Hot - Keywords"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7056a64c-108b-4e45-87ef-f1c5c076b4c5",
+              "name": "stream",
+              "value": "reddit_top",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        -560
+      ],
+      "id": "e3596e7d-fc70-49c9-95ed-764439bee4bc",
+      "name": "tag_reddit_top"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c9860b60-11c2-4698-a93c-74e00de7aa59",
+              "name": "stream",
+              "value": "reddit_hot",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        240,
+        -128
+      ],
+      "id": "5d273557-9dff-437b-81c1-2029d2331eb2",
+      "name": "tag_reddit_hot"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4",
+          "mode": "list",
+          "cachedResultName": "GPT-4"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "=You analyze Reddit discussions to extract business-level audience insights.\nReturn concise insights and practical for content creation. NO fluff.\nAlways answer in JSON."
+            },
+            {
+              "content": "=POST METADATA:\nTitle: {{ $json.post.title }}\nSubreddit: {{ $json.post.subreddit }}\nTag: {{ $json.tags_stageA }}\n\nCOMMENTS (cleaned):\n{{ $json.cleaned_comments }}\n\nTASK:\n\nBased on the Tag, perform ONE of the following:\n\n---\n\n## IF Tag = \"technical\":\n\nIdentify:\n\n- What outcome users are trying to achieve\n- Tools, frameworks, models, APIs or repos mentioned\n- The \"core technical problem\" being discussed\n- How people are currently solving it (workarounds) (if any)\n- Success Metrics: How they measure value\n\nExtract:\n\n- Technical insights (APIs, tools, models, repos, benchmarks)\n- Trust Signals: What builds credibility\n- Specific language patterns (exact phrases used by users)\n- 3 \"content angles\" for LinkedIn posts (technical POV)\n\n---\n\n## IF Tag = \"emotional\" (pain/frustration/motivation):\n\nIdentify:\n\n- Desired outcomes / what they wish existed\n- Pain points / obstacles preventing progress\n- Objections or reasons they stop using a tool\n- Buying triggers: what would make them take action\n\nExtract:\n\n- Emotional Insights (Highlight opinions, debates, misconceptions)\n- Emotional signals (fears, frustrations, motivations)\n- Emotional language patterns (exact phrases used by users)\n- 3 \"content angles\" for LinkedIn relatable post (human POV)\n\n---\n\nOUTPUT FORMAT (strict JSON):\n\n{\n\"type\": \"technical | emotional\",\n\n\"desired_outcomes\": [\"...\" ],\n\"core_problem\": [\"...\"],\n\n\"pain_points\": [\"...\"],\n\"objections\": [\"...\"],\n\n\"current_solutions\": [\"...\"],\n\"success_metrics\": [\"...\"],\n\"trust_signals\": [\"...\"],\n\n\"emotional_signals\": [\"...\"],\n\"buying_triggers\": [\"...\"],\n\n\"language_patterns\": [\"... exact user phrases ...\"],\n\n\"content_angles\": [\"... technical or emotional LinkedIn POV ...\"]\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "maxTokens": 2000,
+          "textFormat": {
+            "textOptions": {
+              "type": "json_object"
+            }
+          },
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        2448,
+        -512
+      ],
+      "id": "05962302-de92-4577-bf0a-0358eddcf002",
+      "name": "model - TOP",
+      "credentials": {
+        "openAiApi": {
+          "id": "Hwn5cEyvFwxCnCr1",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4",
+          "mode": "list",
+          "cachedResultName": "GPT-4"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You analyze Reddit discussions to extract business-level audience insights.\nReturn concise insights and practical for content creation. NO fluff.\nAlways answer in JSON."
+            },
+            {
+              "content": "=POST METADATA:\nTitle: {{ $json.post.title }}\nSubreddit: {{ $json.post.subreddit }}\nTag: {{ $json.tags_stageA }}\n\nCOMMENTS (cleaned):\n{{ $json.cleaned_comments }}\n\nTASK:\n\nBased on the Tag, perform ONE of the following:\n\n---\n\n## IF Tag = \"technical\":\n\nIdentify:\n\n- What outcome users are trying to achieve\n- Tools, frameworks, models, APIs or repos mentioned\n- The \"core technical problem\" being discussed\n- How people are currently solving it (workarounds) (if any)\n- Success Metrics: How they measure value\n\nExtract:\n\n- Technical insights (APIs, tools, models, repos, benchmarks)\n- Trust Signals: What builds credibility\n- Specific language patterns (exact phrases used by users)\n- 3 \"content angles\" for LinkedIn posts (technical POV)\n\n---\n\n## IF Tag = \"emotional\" (pain/frustration/motivation):\n\nIdentify:\n\n- Desired outcomes / what they wish existed\n- Pain points / obstacles preventing progress\n- Objections or reasons they stop using a tool\n- Buying triggers: what would make them take action\n\nExtract:\n\n- Emotional Insights (Highlight opinions, debates, misconceptions)\n- Emotional signals (fears, frustrations, motivations)\n- Emotional language patterns (exact phrases used by users)\n- 3 \"content angles\" for LinkedIn relatable post (human POV)\n\n---\n\nOUTPUT FORMAT (strict JSON):\n\n{\n\"type\": \"technical | emotional\",\n\n\"desired_outcomes\": [\"...\" ],\n\"core_problem\": [\"...\"],\n\n\"pain_points\": [\"...\"],\n\"objections\": [\"...\"],\n\n\"current_solutions\": [\"...\"],\n\"success_metrics\": [\"...\"],\n\"trust_signals\": [\"...\"],\n\n\"emotional_signals\": [\"...\"],\n\"buying_triggers\": [\"...\"],\n\n\"language_patterns\": [\"... exact user phrases ...\"],\n\n\"content_angles\": [\"... technical or emotional LinkedIn POV ...\"]\n}"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "maxTokens": 2000,
+          "textFormat": {
+            "textOptions": {
+              "type": "json_object"
+            }
+          },
+          "temperature": 0.3
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        2448,
+        -112
+      ],
+      "id": "62d1d1c0-1a7f-45e9-aa04-79fb8aa56089",
+      "name": "model - HOT",
+      "credentials": {
+        "openAiApi": {
+          "id": "Hwn5cEyvFwxCnCr1",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse OpenAI response after merge\nconst items = $input.all();\n\nreturn items.map((item, index) => {\n  let insights;\n  \n  try {\n    // Extract OpenAI content\n    let content;\n    \n    if (item.json.output?.[0]?.content?.[0]?.text) {\n      content = item.json.output[0].content[0].text;\n    } else if (item.json.text) {\n      content = item.json.text;\n    } else if (item.json.message?.content) {\n      content = item.json.message.content;\n    }\n    \n    if (!content) {\n      console.log('Available keys in merged item:', Object.keys(item.json));\n      throw new Error('No OpenAI content found after merge');\n    }\n    \n    insights = (typeof content === 'object') ? content : JSON.parse(content);\n    console.log(`✓ Item ${index + 1}: Successfully extracted insights`);\n    \n  } catch (error) {\n    console.error(`❌ Item ${index + 1}: Failed to parse:`, error.message);\n    insights = {\n      error: 'Failed to parse insights',\n      error_message: error.message\n    };\n  }\n  \n  // After merge, both datasets are in item.json\n  return {\n    json: {\n      // Original data from Filter Spam (Input 1)\n      post: item.json.post,\n      tags_stageA: item.json.tags_stageA,\n      source: item.json.source || 'reddit',\n      stats: item.json.stats,\n      cleaned_count: item.json.cleaned_count,\n      cleaned_comments: item.json.cleaned_comments,\n      \n      // AI insights from OpenAI (Input 2)\n      insights: insights,\n      \n      // Timestamp\n      analyzed_at: new Date().toISOString()\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3008,
+        -496
+      ],
+      "id": "56cd72be-ef13-48a0-abd3-7d92d00cec64",
+      "name": "Extract OpenAI Insights - TOP"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "includeUnpaired": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2768,
+        -672
+      ],
+      "id": "df4bd437-8df5-4641-b6ac-1161ca7fed9e",
+      "name": "Merge - Top"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse OpenAI response after merge\nconst items = $input.all();\n\nreturn items.map((item, index) => {\n  let insights;\n  \n  try {\n    // Extract OpenAI content\n    let content;\n    \n    if (item.json.output?.[0]?.content?.[0]?.text) {\n      content = item.json.output[0].content[0].text;\n    } else if (item.json.text) {\n      content = item.json.text;\n    } else if (item.json.message?.content) {\n      content = item.json.message.content;\n    }\n    \n    if (!content) {\n      console.log('Available keys in merged item:', Object.keys(item.json));\n      throw new Error('No OpenAI content found after merge');\n    }\n    \n    insights = (typeof content === 'object') ? content : JSON.parse(content);\n    console.log(`✓ Item ${index + 1}: Successfully extracted insights`);\n    \n  } catch (error) {\n    console.error(`❌ Item ${index + 1}: Failed to parse:`, error.message);\n    insights = {\n      error: 'Failed to parse insights',\n      error_message: error.message\n    };\n  }\n  \n  // After merge, both datasets are in item.json\n  return {\n    json: {\n      // Original data from Filter Spam (Input 1)\n      post: item.json.post,\n      tags_stageA: item.json.tags_stageA,\n      source: item.json.source || 'reddit',\n      stats: item.json.stats,\n      cleaned_count: item.json.cleaned_count,\n      cleaned_comments: item.json.cleaned_comments,\n      \n      // AI insights from OpenAI (Input 2)\n      insights: insights,\n      \n      // Timestamp\n      analyzed_at: new Date().toISOString()\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3008,
+        -96
+      ],
+      "id": "b3319a34-f430-4bae-a616-bee85d2a744e",
+      "name": "Extract OpenAI Insights - Hot"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Calculate ContentScore: SignalScore + Insight Richness\nconst items = $input.all();\n\nreturn items.map(item => {\n  const insights = item.json.insights;\n  const signalScore = item.json.post.SignalScore || 1;\n  \n  // Count insights (higher = better for LinkedIn content)\n  const painPointCount = insights.pain_points?.length || 0;\n  const languagePatternCount = insights.language_patterns?.length || 0;\n  const contentAngleCount = insights.content_angles?.length || 0;\n  const desiredOutcomeCount = insights.desired_outcomes?.length || 0;\n  const emotionalSignalCount = insights.emotional_signals?.length || 0;\n  \n  // Insight richness score (0-100)\n  const insightRichness = Math.min(\n    painPointCount * 20 +      // 10 → 20 (doubled)\n    languagePatternCount * 10 + // 5 → 10 (doubled)\n    contentAngleCount * 30 +    // 15 → 30 (doubled)\n    desiredOutcomeCount * 16 +  // 8 → 16 (doubled)\n    emotionalSignalCount * 10,  // 5 → 10 (doubled)\n    200  // 100 → 200 (doubled ceiling)\n  );\n  \n  // Comment engagement score\n  const commentStats = item.json.stats || {};\n  const commentEngagement = Math.log1p(commentStats.filtered_count || 0) * 10;\n  \n  // Combined ContentScore (weighted)\n  // 30% SignalScore, 50% Insight Richness, 20% Comment Engagement\n  const contentScore = (\n    signalScore * 0.3 +\n    insightRichness * 0.5 +\n    commentEngagement * 0.2\n  );\n  \n  console.log(`Post: \"${item.json.post.title.substring(0, 40)}...\"`);\n  console.log(`  SignalScore: ${signalScore.toFixed(2)}`);\n  console.log(`  Insight Richness: ${insightRichness.toFixed(2)}`);\n  console.log(`  Comment Engagement: ${commentEngagement.toFixed(2)}`);\n  console.log(`  → ContentScore: ${contentScore.toFixed(2)}`);\n  \n  return {\n    json: {\n      ...item.json,\n      contentScore: contentScore,\n      insight_metrics: {\n        pain_points: painPointCount,\n        language_patterns: languagePatternCount,\n        content_angles: contentAngleCount,\n        desired_outcomes: desiredOutcomeCount,\n        emotional_signals: emotionalSignalCount,\n        richness_score: insightRichness\n      }\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3600,
+        -304
+      ],
+      "id": "2e1a2c9f-8b8f-4c9e-8b8b-0a84241a9a1e",
+      "name": "Content Score"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "contentScore",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        3808,
+        -304
+      ],
+      "id": "294986ed-9569-4310-9e76-2a1a3e0872b6",
+      "name": "Sort"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "options": {
+          "includeUnpaired": true
+        }
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        2784,
+        -256
+      ],
+      "id": "0725c06d-5b1f-4505-a6ca-863093c113c1",
+      "name": "Merge Hot"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3392,
+        -304
+      ],
+      "id": "e025a36b-abfb-4078-ae9b-e0b7ee72b1d4",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "tableId": "reddit_posts",
+        "dataToSend": "autoMapInputData"
+      },
+      "type": "n8n-nodes-base.supabase",
+      "typeVersion": 1,
+      "position": [
+        5776,
+        -304
+      ],
+      "id": "9060a506-0ad4-441c-8239-f69f0eb7a7e5",
+      "name": "Create a row",
+      "credentials": {
+        "supabaseApi": {
+          "id": "WyWtm3mzNrhE0IJi",
+          "name": "reddit-signals"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\n\nreturn items.map(item => {\n  return {\n    json: {\n      post_id: item.json.post.id,\n      title: item.json.post.title,\n      subreddit: item.json.post.subreddit,\n      author: item.json.post.author,\n      url: item.json.post.url,\n      permalink: item.json.post.permalink,\n      score: item.json.post.score,\n      num_comments: item.json.post.num_comments,\n      upvote_ratio: item.json.post.upvote_ratio,\n      signal_score: item.json.post.SignalScore || 0,\n      content_score: item.json.contentScore,\n      source: item.json.source,\n      link_flair_text: item.json.post.link_flair_text || null,\n      spam_removed: item.json.stats.spam_removed,\n      spam_rate: item.json.stats.removal_rate,\n      cleaned_count: item.json.cleaned_count,\n      pain_points: item.json.insights.pain_points || [],\n      language_patterns: item.json.insights.language_patterns || [],\n      content_angles: item.json.insights.content_angles || [],\n      desired_outcomes: item.json.insights.desired_outcomes || [],\n      emotional_signals: item.json.insights.emotional_signals || [],\n      insights_full: item.json.insights,\n      analyzed_at: item.json.analyzed_at\n    }\n  };\n});"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5568,
+        -304
+      ],
+      "id": "eb80605f-9479-4ef0-a347-9c69bab68875",
+      "name": "Format for Supabase"
+    },
+    {
+      "parameters": {
+        "maxItems": 10
+      },
+      "type": "n8n-nodes-base.limit",
+      "typeVersion": 1,
+      "position": [
+        4016,
+        -304
+      ],
+      "id": "6c7c5018-7840-49ce-9475-e8ff3d80224f",
+      "name": "Limit 10"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Aggregate all insights from top 10 posts\nconst items = $input.all();\n\n// Initialize aggregation containers\nconst allPainPoints = [];\nconst allLanguagePatterns = [];\nconst allContentAngles = [];\nconst allDesiredOutcomes = [];\nconst allEmotionalSignals = [];\nconst themeFrequency = {};\nconst subredditBreakdown = {};\nconst posts = [];\n\n// Process each post\nitems.forEach(item => {\n  const insights = item.json.insights;\n  const post = item.json.post;\n  \n  // Collect post summary\n  posts.push({\n    title: post.title,\n    subreddit: post.subreddit,\n    score: post.score,\n    num_comments: post.num_comments,\n    content_score: item.json.contentScore,\n    url: `https://reddit.com${post.permalink}`,\n    pain_points_count: insights.pain_points?.length || 0,\n    type: insights.type || 'unknown'\n  });\n  \n  // Aggregate pain points\n  if (insights.pain_points) {\n    insights.pain_points.forEach(pp => {\n      if (pp && pp.trim()) allPainPoints.push(pp);\n    });\n  }\n  \n  // Aggregate language patterns\n  if (insights.language_patterns) {\n    insights.language_patterns.forEach(lp => {\n      if (lp && lp.trim()) allLanguagePatterns.push(lp);\n    });\n  }\n  \n  // Aggregate content angles\n  if (insights.content_angles) {\n    insights.content_angles.forEach(ca => {\n      if (ca && ca.trim()) allContentAngles.push(ca);\n    });\n  }\n  \n  // Aggregate desired outcomes\n  if (insights.desired_outcomes) {\n    insights.desired_outcomes.forEach(outcome => {\n      if (outcome && outcome.trim()) allDesiredOutcomes.push(outcome);\n    });\n  }\n  \n  // Aggregate emotional signals\n  if (insights.emotional_signals) {\n    insights.emotional_signals.forEach(es => {\n      if (es && es.trim()) allEmotionalSignals.push(es);\n    });\n  }\n  \n  // Count theme frequencies (by type)\n  const type = insights.type || 'unknown';\n  themeFrequency[type] = (themeFrequency[type] || 0) + 1;\n  \n  // Count subreddit breakdown\n  const subreddit = post.subreddit;\n  subredditBreakdown[subreddit] = (subredditBreakdown[subreddit] || 0) + 1;\n});\n\n// Calculate statistics\nconst totalPosts = items.length;\nconst avgContentScore = items.reduce((sum, item) => sum + item.json.contentScore, 0) / totalPosts;\nconst avgSignalScore = items.reduce((sum, item) => sum + (item.json.post.SignalScore || 0), 0) / totalPosts;\n\n// Create aggregated output\nreturn [{\n  json: {\n    report_metadata: {\n      generated_at: new Date().toISOString(),\n      total_posts_analyzed: totalPosts,\n      avg_content_score: avgContentScore.toFixed(2),\n      avg_signal_score: avgSignalScore.toFixed(2),\n      date_range: \"Last 48 hours\" // Adjust based on your collection window\n    },\n    posts_summary: posts,\n    aggregated_insights: {\n      pain_points: allPainPoints,\n      language_patterns: allLanguagePatterns,\n      content_angles: allContentAngles,\n      desired_outcomes: allDesiredOutcomes,\n      emotional_signals: allEmotionalSignals\n    },\n    theme_frequency: themeFrequency,\n    subreddit_breakdown: subredditBreakdown,\n    statistics: {\n      total_pain_points: allPainPoints.length,\n      total_language_patterns: allLanguagePatterns.length,\n      total_content_angles: allContentAngles.length,\n      unique_subreddits: Object.keys(subredditBreakdown).length\n    }\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4224,
+        -304
+      ],
+      "id": "4a184096-9d3f-449b-8746-a2bb104b9346",
+      "name": "Aggregate Insights for Report"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "gpt-4-turbo",
+          "mode": "list",
+          "cachedResultName": "GPT-4-TURBO"
+        },
+        "responses": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a market intelligence analyst specializing in social media insights for LinkedIn content strategy. Your reports are data-driven, actionable, and focused on helping content creators understand audience pain points, language patterns, and trending topics in the AI/tech space.\n\nYour writing is:\n- Professional but accessible\n- Data-backed with specific examples\n- Action-oriented with clear recommendations\n- Structured for easy scanning\n\nFormat your report in clean Markdown with clear sections and bullet points."
+            },
+            {
+              "role": "=user",
+              "content": "=const data = $json;\n\nreturn `# Market Intelligence Report - Reddit AI Discussions\n\n**Analysis Period:** ${data.report_metadata.date_range}\n**Posts Analyzed:** ${data.report_metadata.total_posts_analyzed}\n**Average Content Score:** ${data.report_metadata.avg_content_score}\n**Generated:** ${new Date().toLocaleDateString()}\n\n---\n\n## DATA TO ANALYZE:\n\n### Top Posts Summary:\n${JSON.stringify(data.posts_summary, null, 2)}\n\n### Aggregated Insights:\n\n**Pain Points (${data.aggregated_insights.pain_points.length} total):**\n${data.aggregated_insights.pain_points.slice(0, 20).map((p, i) => `${i + 1}. ${p}`).join('\\n')}\n\n**Language Patterns (${data.aggregated_insights.language_patterns.length} total):**\n${data.aggregated_insights.language_patterns.slice(0, 20).map((p, i) => `${i + 1}. ${p}`).join('\\n')}\n\n**Content Angles (${data.aggregated_insights.content_angles.length} total):**\n${data.aggregated_insights.content_angles.slice(0, 15).map((p, i) => `${i + 1}. ${p}`).join('\\n')}\n\n**Desired Outcomes:**\n${data.aggregated_insights.desired_outcomes.slice(0, 15).map((p, i) => `${i + 1}. ${p}`).join('\\n')}\n\n**Emotional Signals:**\n${data.aggregated_insights.emotional_signals.slice(0, 15).map((p, i) => `${i + 1}. ${p}`).join('\\n')}\n\n### Theme Distribution:\n${JSON.stringify(data.theme_frequency, null, 2)}\n\n### Subreddit Breakdown:\n${JSON.stringify(data.subreddit_breakdown, null, 2)}\n\n---\n\n## YOUR TASK:\n\nCreate a comprehensive Market Intelligence Report with these sections:\n\n### 1. EXECUTIVE SUMMARY\n- 2-3 sentences on the dominant themes this period\n- Key finding that stands out most\n\n### 2. TRENDING THEMES & TOPIC FREQUENCIES\n- Identify 3-5 major themes from the discussions\n- Rank by prominence and engagement\n- Note any emerging topics\n\n### 3. TOP PAIN POINTS (Priority for LinkedIn Content)\n- List the top 5-7 most significant pain points\n- Group similar pain points together\n- For each, note: severity, frequency, and potential content opportunity\n\n### 4. CUSTOMER LANGUAGE PATTERNS\n- Identify 5-8 authentic phrases/expressions people use\n- Note the emotional tone (frustrated, hopeful, cynical, etc.)\n- Highlight any jargon or technical terms that signal expertise level\n\n### 5. SENTIMENT ANALYSIS\n- Overall sentiment trend (positive/negative/mixed)\n- Specific emotions detected (frustration, excitement, skepticism, etc.)\n- Any shifts in sentiment across different topics\n\n### 6. LINKEDIN CONTENT ANGLES (ACTIONABLE)\nFor each angle, provide:\n- Headline/hook idea\n- Key talking points\n- Target audience\n- Expected engagement type\n\nSuggest 5-7 specific LinkedIn post ideas based on the insights.\n\n### 7. OPPORTUNITY IDENTIFICATION\n- Underserved needs or questions\n- Content gaps to fill\n- Potential thought leadership angles\n- Topics with high engagement potential\n\n### 8. RECOMMENDED ACTIONS\n- Top 3 immediate content opportunities\n- Timing suggestions (post now vs. wait for more data)\n- Audience segments to target\n\n---\n\nMake the report scannable with clear headers, bullet points, and bold for key findings. Include specific examples from the data where relevant.`;"
+            }
+          ]
+        },
+        "builtInTools": {},
+        "options": {
+          "maxTokens": 4000
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 2,
+      "position": [
+        4432,
+        -304
+      ],
+      "id": "fb244664-0027-401f-a1d1-92e497649d2c",
+      "name": "Report Generation Node",
+      "credentials": {
+        "openAiApi": {
+          "id": "Hwn5cEyvFwxCnCr1",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "databaseId": {
+          "__rl": true,
+          "value": "2aa0198c-ead5-80e0-9a04-caf61f3f31bb",
+          "mode": "list",
+          "cachedResultName": "Market Intelligence Reports",
+          "cachedResultUrl": "https://www.notion.so/2aa0198cead580e09a04caf61f3f31bb"
+        },
+        "title": "=\"Market Intelligence Report - \" + $now.format('YYYY-MM-DD')",
+        "propertiesUi": {
+          "propertyValues": [
+            {
+              "key": "Generated Date|date",
+              "date": "={{ $('Aggregate Insights for Report').item.json.report_metadata.generated_at }}"
+            },
+            {
+              "key": "Posts Analyzed|number",
+              "numberValue": "={{ $('Aggregate Insights for Report').item.json.report_metadata.total_posts_analyzed }}"
+            },
+            {
+              "key": "Avg Content Score|number",
+              "numberValue": "={{ Number($('Aggregate Insights for Report').item.json.report_metadata.avg_content_score) }}"
+            },
+            {
+              "key": "Report Status|select",
+              "selectValue": "Draft"
+            }
+          ]
+        },
+        "blockUi": {
+          "blockValues": [
+            {
+              "type": "={{ $node[\"Format Report for Notion\"].json.blocks }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        5040,
+        -304
+      ],
+      "id": "7582428c-5290-4836-8483-8f64f882efaf",
+      "name": "Create a database page",
+      "credentials": {
+        "notionApi": {
+          "id": "BYZpEUOHCOzYY8EI",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "databasePage",
+        "operation": "update",
+        "pageId": {
+          "__rl": true,
+          "value": "={{ $json.id }}",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.notion",
+      "typeVersion": 2.2,
+      "position": [
+        5296,
+        -304
+      ],
+      "id": "e2adbcae-047c-47e5-b84a-dfa2b1872512",
+      "name": "Add Report Content to Page",
+      "credentials": {
+        "notionApi": {
+          "id": "BYZpEUOHCOzYY8EI",
+          "name": "Notion account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the OpenAI response\nconst items = $input.all();\n\n// Debug: log what we're receiving\nconsole.log('Number of items:', items.length);\nconsole.log('First item structure:', JSON.stringify(items[0].json, null, 2).substring(0, 500));\n\n// Get the report content from the actual OpenAI structure\nlet reportContent;\n\ntry {\n  // The correct structure based on your output:\n  // items[0].json.output[0].content[0].text\n  if (items[0].json.output && items[0].json.output[0] && items[0].json.output[0].content) {\n    reportContent = items[0].json.output[0].content[0].text;\n  }\n  // Fallback: try standard OpenAI structure\n  else if (items[0].json.choices && items[0].json.choices[0]) {\n    reportContent = items[0].json.choices[0].message.content;\n  }\n  // Another fallback\n  else if (items[0].json.content && items[0].json.content[0] && items[0].json.content[0].text) {\n    reportContent = items[0].json.content[0].text;\n  }\n  else {\n    throw new Error('Could not find report in expected structure');\n  }\n} catch (error) {\n  console.error('Error extracting content:', error.message);\n  console.error('Full response structure:', JSON.stringify(items[0].json, null, 2));\n  throw new Error('Could not extract report content from OpenAI response. Check logs for details.');\n}\n\nif (!reportContent || reportContent.trim() === '') {\n  throw new Error('Report content is empty');\n}\n\nconsole.log('✅ Report content extracted, length:', reportContent.length);\n\n// Split the report into lines for block creation\nconst lines = reportContent.split('\\n').filter(line => line.trim() !== '');\n\n// Convert markdown to Notion blocks\nconst blocks = [];\n\nlines.forEach(line => {\n  const trimmed = line.trim();\n  \n  // Skip empty lines\n  if (!trimmed) return;\n  \n  // Heading 1\n  if (trimmed.startsWith('# ')) {\n    blocks.push({\n      object: 'block',\n      type: 'heading_1',\n      heading_1: {\n        rich_text: [{\n          type: 'text',\n          text: { content: trimmed.substring(2) }\n        }]\n      }\n    });\n  }\n  // Heading 2\n  else if (trimmed.startsWith('## ')) {\n    blocks.push({\n      object: 'block',\n      type: 'heading_2',\n      heading_2: {\n        rich_text: [{\n          type: 'text',\n          text: { content: trimmed.substring(3) }\n        }]\n      }\n    });\n  }\n  // Heading 3\n  else if (trimmed.startsWith('### ')) {\n    blocks.push({\n      object: 'block',\n      type: 'heading_3',\n      heading_3: {\n        rich_text: [{\n          type: 'text',\n          text: { content: trimmed.substring(4) }\n        }]\n      }\n    });\n  }\n  // Bullet point\n  else if (trimmed.startsWith('- ')) {\n    blocks.push({\n      object: 'block',\n      type: 'bulleted_list_item',\n      bulleted_list_item: {\n        rich_text: [{\n          type: 'text',\n          text: { content: trimmed.substring(2) }\n        }]\n      }\n    });\n  }\n  // Numbered list\n  else if (/^\\d+\\.\\s/.test(trimmed)) {\n    blocks.push({\n      object: 'block',\n      type: 'numbered_list_item',\n      numbered_list_item: {\n        rich_text: [{\n          type: 'text',\n          text: { content: trimmed.replace(/^\\d+\\.\\s/, '') }\n        }]\n      }\n    });\n  }\n  // Divider\n  else if (trimmed === '---') {\n    blocks.push({\n      object: 'block',\n      type: 'divider',\n      divider: {}\n    });\n  }\n  // Bold text (simple detection)\n  else if (trimmed.startsWith('**') && trimmed.endsWith('**')) {\n    blocks.push({\n      object: 'block',\n      type: 'paragraph',\n      paragraph: {\n        rich_text: [{\n          type: 'text',\n          text: { content: trimmed.replace(/\\*\\*/g, '') },\n          annotations: { bold: true }\n        }]\n      }\n    });\n  }\n  // Regular paragraph\n  else {\n    // Notion has a 2000 character limit per text block\n    const content = trimmed.length > 2000 ? trimmed.substring(0, 1997) + '...' : trimmed;\n    blocks.push({\n      object: 'block',\n      type: 'paragraph',\n      paragraph: {\n        rich_text: [{\n          type: 'text',\n          text: { content: content }\n        }]\n      }\n    });\n  }\n});\n\n// Limit blocks (Notion API has limits - max 100 per request)\nconst limitedBlocks = blocks.slice(0, 100);\n\nconsole.log('✅ Created blocks:', limitedBlocks.length);\n\n// Also get the aggregated data from the previous node\nconst aggregatedData = $('Aggregate Insights for Report').first().json;\n\nreturn [{\n  json: {\n    report_content: reportContent,\n    blocks: limitedBlocks,\n    aggregated_data: aggregatedData\n  }\n}];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4784,
+        -304
+      ],
+      "id": "6c0a47de-fba7-41be-98ee-46fbe39d6b81",
+      "name": "Format Report for Notion"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "HN Get Top Story IDs",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Reddit - Get Hot Posts",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Reddit - Get Top Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HN Get Top Story IDs": {
+      "main": [
+        [
+          {
+            "node": "Limit to 50 Stories",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit to 50 Stories": {
+      "main": [
+        [
+          {
+            "node": "HN - Get Story Details",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "HN - Get Story Details": {
+      "main": [
+        [
+          {
+            "node": "Filter for AI Topics",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reddit - Get Hot Posts": {
+      "main": [
+        [
+          {
+            "node": "tag_reddit_hot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Reddit - Get Top Posts": {
+      "main": [
+        [
+          {
+            "node": "tag_reddit_top",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Top Posts": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Get Top Post Comments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Over Hot Posts": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Get Hot Post Comments",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Spam & Duplicates Hot": {
+      "main": [
+        [
+          {
+            "node": "model - HOT",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge Hot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Spam & Duplicates Top": {
+      "main": [
+        [
+          {
+            "node": "model - TOP",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge - Top",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Top Post Comments": {
+      "main": [
+        [
+          {
+            "node": "Filter Spam & Duplicates Top",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Hot Post Comments": {
+      "main": [
+        [
+          {
+            "node": "Filter Spam & Duplicates Hot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Reddit Hot Posts": {
+      "main": [
+        [
+          {
+            "node": "Hot SignalScore",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Reddit Top Posts": {
+      "main": [
+        [
+          {
+            "node": "Top SignalScore",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Top SignalScore": {
+      "main": [
+        [
+          {
+            "node": "Top Sort by SignalScore",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hot SignalScore": {
+      "main": [
+        [
+          {
+            "node": "Hot Sort by SignalStore",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Top Sort by SignalScore": {
+      "main": [
+        [
+          {
+            "node": "Top - Limit 18",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hot Sort by SignalStore": {
+      "main": [
+        [
+          {
+            "node": "Hot - Limit 12",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Top - Limit 18": {
+      "main": [
+        [
+          {
+            "node": "Top Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hot - Limit 12": {
+      "main": [
+        [
+          {
+            "node": "Hot Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Top Log": {
+      "main": [
+        [
+          {
+            "node": "Stage A - Top - Keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Hot Log": {
+      "main": [
+        [
+          {
+            "node": "Stage A - Hot - Keywords",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stage A - Top - Keywords": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Top Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Stage A - Hot - Keywords": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Hot Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "tag_reddit_top": {
+      "main": [
+        [
+          {
+            "node": "Extract Reddit Top Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "tag_reddit_hot": {
+      "main": [
+        [
+          {
+            "node": "Extract Reddit Hot Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "model - TOP": {
+      "main": [
+        [
+          {
+            "node": "Merge - Top",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "model - HOT": {
+      "main": [
+        [
+          {
+            "node": "Merge Hot",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Extract OpenAI Insights - TOP": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Top Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge - Top": {
+      "main": [
+        [
+          {
+            "node": "Extract OpenAI Insights - TOP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract OpenAI Insights - Hot": {
+      "main": [
+        [
+          {
+            "node": "Loop Over Hot Posts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Content Score": {
+      "main": [
+        [
+          {
+            "node": "Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort": {
+      "main": [
+        [
+          {
+            "node": "Limit 10",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Hot": {
+      "main": [
+        [
+          {
+            "node": "Extract OpenAI Insights - Hot",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Content Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format for Supabase": {
+      "main": [
+        [
+          {
+            "node": "Create a row",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Limit 10": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Insights for Report",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Insights for Report": {
+      "main": [
+        [
+          {
+            "node": "Report Generation Node",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Report Generation Node": {
+      "main": [
+        [
+          {
+            "node": "Format Report for Notion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create a database page": {
+      "main": [
+        [
+          {
+            "node": "Add Report Content to Page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Report Content to Page": {
+      "main": [
+        [
+          {
+            "node": "Format for Supabase",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Format Report for Notion": {
+      "main": [
+        [
+          {
+            "node": "Create a database page",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "aec231d5-e17b-4579-8c43-694fa93bd9c6",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "dfd20e8d53ec169d19ca349000af06b6b6428a87eed315da21d20e3dfb9676e8"
+  },
+  "id": "0vVDIMrLrQ1bn0Gs",
+  "tags": []
+}
